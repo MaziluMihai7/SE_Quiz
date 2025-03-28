@@ -3,26 +3,26 @@ name: CI Pipeline
 on:
   pull_request:
     branches:
-      - main  # Runs the workflow when a PR is created to main
+      - main 
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js (if applicable)
+      - name: Set up ASP .Net 
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '9.0'
 
       - name: Install dependencies
-        run: npm install  # Change this based on your project (e.g., yarn install, pip install)
+        run: npm install  
 
       - name: Run build
-        run: npm run build  # Adjust this to match your build command
+        run: npm run build  
 
       - name: Run tests (optional)
-        run: npm test  # Run tests if applicable
+        run: npm test  
