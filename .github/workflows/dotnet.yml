@@ -11,7 +11,10 @@ on:
 
 jobs:
   build:
-
+    defaults:
+      run:
+       working-directory: ./SE_Project
+       
     runs-on: ubuntu-latest
 
     steps:
