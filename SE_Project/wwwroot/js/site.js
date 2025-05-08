@@ -1,86 +1,119 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
-    let timeLeft = 30; // Timp inițial (secunde)
-    let timerElement = document.getElementById("time");
-    let correctCount = 0;
-    let wrongCount = 0;
-    let currentQuestionIndex = 0;
+﻿let allQuestions = [];
+let currentQuestionIndex = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let timerInterval;
 
-    // Lista de întrebări
-    const questions = [
-        {
-            question: "Care este limita de viteză în localități?",
-            answers: ["50 km/h", "70 km/h", "90 km/h"],
-            correct: 0
-        },
-        {
-            question: "Ce semnificație are indicatorul STOP?",
-            answers: ["Oprire obligatorie", "Reducerea vitezei", "Interzis să oprești"],
-            correct: 0
-        }
-    ];
-
-    function startTimer() {
-        let timerInterval = setInterval(() => {
-            if (timeLeft > 0) {
-                timeLeft--;
-                timerElement.textContent = timeLeft;
-            } else {
-                clearInterval(timerInterval);
-                loadNextQuestion();
-            }
-        }, 1000);
-    }
-
-    function loadQuestion() {
-        const questionElement = document.querySelector(".question h2");
-        const answerButtons = document.querySelectorAll(".answer");
-
-        let question = questions[currentQuestionIndex];
-        questionElement.textContent = question.question;
-
-        answerButtons.forEach((button, index) => {
-            button.textContent = question.answers[index];
-            button.style.backgroundColor = "#007bff"; // Resetare culoare
-            button.disabled = false; // Reactivare butoane
-            button.onclick = () => checkAnswer(button, index);
+function loadQuestionsFromAPI() {
+    fetch("/api/questions")
+        .then(res => res.json())
+        .then(data => {
+            allQuestions = data;
+            currentQuestionIndex = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            updateScore();
+            loadQuestion(allQuestions[currentQuestionIndex]);
+            startTimer();
+        })
+        .catch(error => {
+            console.error("Eroare la încărcarea întrebărilor:", error);
         });
-    }
+}
 
-    function checkAnswer(button, selectedIndex) {
-        let correctIndex = questions[currentQuestionIndex].correct;
-        const answerButtons = document.querySelectorAll(".answer");
-
-        if (selectedIndex === correctIndex) {
-            correctCount++;
-            document.getElementById("correct-count").textContent = correctCount;
-            button.style.backgroundColor = "green"; // Buton verde pentru răspuns corect
-        } else {
-            wrongCount++;
-            document.getElementById("wrong-count").textContent = wrongCount;
-            button.style.backgroundColor = "red"; // Buton roșu pentru răspuns greșit
-            answerButtons[correctIndex].style.backgroundColor = "green"; // Arată și răspunsul corect
-        }
-
-        // Dezactivează butoanele pentru a preveni spam-ul
-        answerButtons.forEach(btn => btn.disabled = true);
-
-        // Așteaptă 1 secundă, apoi trece la următoarea întrebare
-        setTimeout(loadNextQuestion, 1000);
-    }
-
-    function loadNextQuestion() {
-        if (currentQuestionIndex < questions.length - 1) {
-            currentQuestionIndex++;
-            timeLeft = 30; // Resetează timerul
-            loadQuestion();
-        } else {
-            setTimeout(() => {
-                alert("Quiz terminat! Scor final: " + correctCount + " corecte, " + wrongCount + " greșite.");
-                location.reload(); // Reîncarcă pagina automat după terminarea quiz-ului
-            }, 1000);
-        }
-    }
-
-    loadQuestion();
+function loadQuestion(question) {
+    clearInterval(timerInterval);
     startTimer();
-});
+
+    const quizContainer = document.getElementById('quiz-container');
+    quizContainer.innerHTML = `
+        <div id="timer">Timp: 30</div>
+        <div id="score-box">
+            <p>Corecte: <span id="correct-count">${correctCount}</span></p>
+            <p>Greșite: <span id="wrong-count">${wrongCount}</span></p>
+        </div>
+        <h2>${question.text}</h2>
+    `;
+
+    question.answers.forEach((answer, i) => {
+        const button = document.createElement("button");
+        button.textContent = answer;
+        button.classList.add("answer");
+        button.setAttribute("data-index", i);
+
+        button.addEventListener("click", function () {
+            const selectedIndex = parseInt(this.getAttribute("data-index"));
+            const isCorrect = selectedIndex === question.correctAnswerIndex;
+
+            this.style.backgroundColor = isCorrect ? "green" : "red";
+
+            if (isCorrect) correctCount++;
+            else wrongCount++;
+
+            updateScore();
+            submitAnswerToBackend(question.id, selectedIndex, isCorrect);
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < allQuestions.length) {
+                    loadQuestion(allQuestions[currentQuestionIndex]);
+                } else {
+                    alert("Quiz terminat!");
+                    location.reload();
+                }
+            }, 500);
+        });
+
+        quizContainer.appendChild(button);
+    });
+}
+
+function startTimer() {
+    let timeLeft = 30;
+    const timerElement = document.getElementById("timer");
+    timerElement.textContent = `Timp: ${timeLeft}`;
+
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = `Timp: ${timeLeft}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            wrongCount++;
+            updateScore();
+            currentQuestionIndex++;
+            if (currentQuestionIndex < allQuestions.length) {
+                loadQuestion(allQuestions[currentQuestionIndex]);
+            } else {
+                alert("Timpul s-a terminat! Quiz terminat.");
+                location.reload();
+            }
+        }
+    }, 1000);
+}
+
+function updateScore() {
+    document.getElementById("correct-count").textContent = correctCount;
+    document.getElementById("wrong-count").textContent = wrongCount;
+}
+
+function submitAnswerToBackend(questionId, selectedAnswerIndex, isCorrect) {
+    fetch("/api/answers", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            questionId: questionId,
+            selectedAnswerIndex: selectedAnswerIndex,
+            isCorrect: isCorrect
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+        });
+}
+
+// Start quiz
+loadQuestionsFromAPI();
