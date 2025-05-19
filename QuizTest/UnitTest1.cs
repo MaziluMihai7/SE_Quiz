@@ -8,7 +8,7 @@ namespace QuizTest
 {
     public class UnitTest1
     {
-        [Fact] // Test by Andrei
+        [Fact] 
         public void GetQuestions_ReturnsListOfQuestions()
         {
             // Arrange
@@ -23,7 +23,7 @@ namespace QuizTest
             Assert.Equal(2, questions.Count); // Verifică dacă sunt 2 întrebări
         }
 
-        [Fact] // Test by Maria
+        [Fact] 
         public void SubmitAnswer_ReturnsOkResponse()
         {
             // Arrange
