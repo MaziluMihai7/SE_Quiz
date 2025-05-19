@@ -31,6 +31,16 @@ namespace QuizTest
             var questions = Assert.IsType<List<Question>>(jsonResult.Value);
                             Assert.Equal("Ce semnifică indicatorul STOP?", questions[0].Text);
 }
+        [Fact] 
+        public void GetQuestions_CorrectAnswerIndexIsZero()
+{
+            var controller = new QuestionsController();
+            var result = controller.GetQuestions();
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var questions = Assert.IsType<List<Question>>(jsonResult.Value);
+                            Assert.Equal(0, questions[0].CorrectAnswerIndex);
+                            Assert.Equal(0, questions[1].CorrectAnswerIndex);
+}
 
         [Fact] 
         public void SubmitAnswer_ReturnsOkResponse()
