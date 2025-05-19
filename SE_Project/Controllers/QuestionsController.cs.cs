@@ -1,14 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SE_Project.Models;
+using Xunit;
 
 namespace SE_Project.Controllers
 {
     [ApiController]
     public class QuestionsController : Controller
     {
+        [Fact]
+
         [HttpGet("/api/questions")]
         public IActionResult GetQuestions()
         {
+
             var questions = new List<Question>
             {
                 new Question
@@ -29,6 +33,8 @@ namespace SE_Project.Controllers
 
             return Json(questions);
         }
+
+        [Fact]
 
         [HttpPost("/api/answers")]
         public IActionResult SubmitAnswer([FromBody] AnswerSubmission answer)
