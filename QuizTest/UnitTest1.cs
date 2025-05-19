@@ -22,6 +22,15 @@ namespace QuizTest
             var questions = Assert.IsType<List<Question>>(jsonResult.Value);
             Assert.Equal(2, questions.Count); // Verifică dacă sunt 2 întrebări
         }
+        [Fact] 
+        public void GetQuestions_FirstQuestionHasExpectedText()
+{
+            var controller = new QuestionsController();
+            var result = controller.GetQuestions();
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var questions = Assert.IsType<List<Question>>(jsonResult.Value);
+                            Assert.Equal("Ce semnifică indicatorul STOP?", questions[0].Text);
+}
 
         [Fact] 
         public void SubmitAnswer_ReturnsOkResponse()
